@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { createProject } from '../services/api';
+import { createProject, updateProject } from '../services/api';
+import type { Project } from '../types';
 
-export const ProjectForm = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+interface ProjectFormProps {
+  itemToEdit?: Project | null;
+  onSaved: () => void;
+}
+
+export const ProjectForm: React.FC<ProjectFormProps> = ({ itemToEdit, onSaved }) => {
+  const [title, setTitle] = useState(itemToEdit?.title || '');
+  const [description, setDescription] = useState(itemToEdit?.description || '');
   const [image, setImage] = useState<File | null>(null);
-  const [bookingUrl, setBookingUrl] = useState('');
+  const [bookingUrl, setBookingUrl] = useState(itemToEdit?.bookingUrl || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,21 +26,25 @@ export const ProjectForm = () => {
     }
 
     try {
-      await createProject(formData); // ❗️FormData, а не JSON
-      alert('Проект добавлен');
+      if (itemToEdit) {
+        await updateProject(itemToEdit.id, formData);
+      } else {
+        await createProject(formData);
+      }
+      alert('Сохранено');
+      onSaved();
       setTitle('');
       setDescription('');
       setImage(null);
       setBookingUrl('');
     } catch (err) {
       console.error(err);
-      alert('Ошибка при добавлении');
+      alert('Ошибка при сохранении');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3>Добавить проект</h3>
       <input
         type="text"
         placeholder="Название"
@@ -59,7 +69,7 @@ export const ProjectForm = () => {
         accept="image/*"
         onChange={(e) => setImage(e.target.files?.[0] || null)}
       />
-      <button type="submit">Добавить</button>
+      <button type="submit">{itemToEdit ? 'Обновить' : 'Добавить'}</button>
     </form>
   );
 };

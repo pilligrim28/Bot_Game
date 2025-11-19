@@ -1,11 +1,17 @@
 import { useState } from 'react';
-import { createPoster } from '../services/api';
+import { createPoster, updatePoster } from '../services/api';
+import type { Poster } from '../types';
 
-export const PosterForm = () => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+interface PosterFormProps {
+  itemToEdit?: Poster | null;
+  onSaved: () => void;
+}
+
+export const PosterForm: React.FC<PosterFormProps> = ({ itemToEdit, onSaved }) => {
+  const [title, setTitle] = useState(itemToEdit?.title || '');
+  const [description, setDescription] = useState(itemToEdit?.description || '');
   const [image, setImage] = useState<File | null>(null);
-  const [bookingUrl, setBookingUrl] = useState('');
+  const [bookingUrl, setBookingUrl] = useState(itemToEdit?.bookingUrl || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,21 +26,25 @@ export const PosterForm = () => {
     }
 
     try {
-      await createPoster(formData); // ❗️FormData, а не JSON
-      alert('Афиша добавлена');
+      if (itemToEdit) {
+        await updatePoster(itemToEdit.id, formData);
+      } else {
+        await createPoster(formData);
+      }
+      alert('Сохранено');
+      onSaved();
       setTitle('');
       setDescription('');
       setImage(null);
       setBookingUrl('');
     } catch (err) {
       console.error(err);
-      alert('Ошибка при добавлении');
+      alert('Ошибка при сохранении');
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3>Добавить афишу</h3>
       <input
         type="text"
         placeholder="Название"
@@ -59,7 +69,7 @@ export const PosterForm = () => {
         accept="image/*"
         onChange={(e) => setImage(e.target.files?.[0] || null)}
       />
-      <button type="submit">Добавить</button>
+      <button type="submit">{itemToEdit ? 'Обновить' : 'Добавить'}</button>
     </form>
   );
 };

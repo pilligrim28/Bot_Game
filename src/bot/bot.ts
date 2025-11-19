@@ -1,3 +1,4 @@
+import 'dotenv/config'; 
 import { Telegraf } from 'telegraf';
 import { startHandler } from './handlers/start.handler';
 import { helpHandler } from './handlers/help.handler';

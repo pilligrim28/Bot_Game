@@ -1,3 +1,4 @@
+// src/bot/handlers/start.handler.ts
 import { Context } from 'telegraf';
 import { getPostersWithButtons, getProjectsWithButtons } from '../utils/button.helpers';
 
@@ -5,7 +6,7 @@ import { getPostersWithButtons, getProjectsWithButtons } from '../utils/button.h
 const mainMenu = () => ({
   inline_keyboard: [
     [
-      { text: 'Афиша', callback_data: 'poster' }, // ✅ Было: callback_
+      { text: 'Афиша', callback_data: 'poster' }, // ✅
       { text: 'Проекты', callback_data: 'project' }, // ✅
     ],
     [
@@ -40,7 +41,7 @@ export const startHandler = async (ctx: Context) => {
     { url: imageUrl },
     {
       caption: 'Привет! Я Тигробот Мэддик, житель Madkids. \nMadkids - это зоны для безудержного веселья и прекрасного времяпрепровождения.',
-      reply_markup: keyboard, // ✅ Теперь типы должны совпадать
+      reply_markup: keyboard,
     }
   );
 };
