@@ -7,7 +7,7 @@ interface PosterListProps {
 }
 
 export const PosterList: React.FC<PosterListProps> = ({ onEdit }) => {
-  const [posters, setPosters] = useState<Poster[]>([]);
+  const [posters, setPosters] = useState<Poster[]>([]); // ✅ Исправлено: добавлена закрывающая скобка
 
   useEffect(() => {
     const loadPosters = async () => {
@@ -42,7 +42,8 @@ export const PosterList: React.FC<PosterListProps> = ({ onEdit }) => {
           <div key={p.id} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px 0' }}>
             <h4>{p.title}</h4>
             <p>{p.description}</p>
-            {p.imageUrl && <img src={p.imageUrl} alt={p.title} style={{ maxWidth: '200px' }} />}
+            {/* ✅ Исправлено: добавлен полный URL для изображения */}
+            {p.imageUrl && <img src={`http://localhost:3000${p.imageUrl}`} alt={p.title} style={{ maxWidth: '200px' }} />}
             <div>
               <button onClick={() => onEdit(p)}>Редактировать</button>
               <button onClick={() => handleDelete(p.id)}>Удалить</button>

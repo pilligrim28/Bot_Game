@@ -1,8 +1,9 @@
 // src/bot/handlers/start.handler.ts
 import { Context } from 'telegraf';
+import { InputFile } from 'telegraf/typings/core/types/typegram';
 import { getPostersWithButtons, getProjectsWithButtons } from '../utils/button.helpers';
 
-// Функция, которая возвращает основное меню (из предыдущих уроков)
+// ✅ Правильная функция меню
 const mainMenu = () => ({
   inline_keyboard: [
     [
@@ -21,8 +22,8 @@ const mainMenu = () => ({
 });
 
 export const startHandler = async (ctx: Context) => {
-  // URL картинки (можешь заменить на свою)
-  const imageUrl = 'https://cs13.pikabu.ru/post_img/2023/08/30/5/og_og_1693377898277428934.jpg';
+  // ❗️Замени на путь к твоему локальному изображению
+  const imagePath = './assets/mascot.png';
 
   // Получаем кнопки из БД
   const posterButtons = await getPostersWithButtons();
@@ -38,7 +39,7 @@ export const startHandler = async (ctx: Context) => {
   };
 
   await ctx.replyWithPhoto(
-    { url: imageUrl },
+    new InputFile(imagePath), // ✅ Используем InputFile
     {
       caption: 'Привет! Я Тигробот Мэддик, житель Madkids. \nMadkids - это зоны для безудержного веселья и прекрасного времяпрепровождения.',
       reply_markup: keyboard,

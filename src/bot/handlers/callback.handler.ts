@@ -1,6 +1,30 @@
 import { Telegraf, Context } from 'telegraf';
 import { fetchPosters, fetchProjects } from '../utils/data-fetcher';
-import { escapeMarkdownV2 } from '../utils/escape-markdown';
+
+// ✅ Улучшенная функция экранирования (только опасные символы)
+// ✅ Улучшенная функция экранирования (только реально опасные символы)
+function escapeMarkdownV1(text: string): string {
+  return text
+    .replace(/\*/g, '\\*') // ✅ Экранируем *
+    .replace(/_/g, '\\_') // ✅ Экранируем _
+    .replace(/\[/g, '\\[') // ✅ Экранируем [
+    .replace(/\]/g, '\\]') // ✅ Экранируем ]
+    .replace(/\(/g, '\\(') // ✅ Экранируем (
+    .replace(/\)/g, '\\)') // ✅ Экранируем )
+    .replace(/~/g, '\\~') // ✅ Экранируем ~
+    .replace(/`/g, '\\`') // ✅ Экранируем `
+    .replace(/>/g, '\\>') // ✅ Экранируем >
+    .replace(/#/g, '\\#') // ✅ Экранируем #
+    .replace(/\+/g, '\\+') // ✅ Экранируем +
+    // .replace(/-/g, '\\-')  // ❗️Убрано
+    .replace(/=/g, '\\=') // ✅ Экранируем =
+    .replace(/\|/g, '\\|') // ✅ Экранируем |
+    .replace(/\{/g, '\\{') // ✅ Экранируем {
+    .replace(/\}/g, '\\}') // ✅ Экранируем }
+    // .replace(/\./g, '\\.')  // ❗️Убрано
+    // .replace(/!/g, '\\!'); // ❗️Убрано
+    // .replace(/\?/g, '\\?'); // ❗️Убрано
+}
 
 export const setupCallback = (bot: Telegraf) => {
   bot.on('callback_query', async (ctx) => {
@@ -13,9 +37,14 @@ export const setupCallback = (bot: Telegraf) => {
         const posters = await fetchPosters();
         if (posters.length > 0) {
           for (const p of posters) {
-            // ❗️Экранируем title и description
-            const message = `*${escapeMarkdownV2(p.title)}*\n${escapeMarkdownV2(p.description)}`;
-            // ❗️Отправляем кнопку "Забронировать" отдельно
+            // ✅ Используем полный URL для изображения
+            const imageUrl = p.imageUrl ? `http://localhost:3000${p.imageUrl}` : '';
+            // ✅ Отделяем заголовок от описания
+            const escapedTitle = escapeMarkdownV1(p.title);
+            const escapedDescription = escapeMarkdownV1(p.description);
+            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`; // ✅ Добавлены звёздочки и перенос строки
+            // ✅ Сокращаем caption до 1024 символов
+            const caption = fullCaption.length > 1024 ? fullCaption.substring(0, 1021) + '...' : fullCaption;
             const keyboard = {
               inline_keyboard: [
                 [
@@ -23,19 +52,31 @@ export const setupCallback = (bot: Telegraf) => {
                 ]
               ]
             };
-            // ❗️Используем MarkdownV2
-            await ctx.reply(message, { parse_mode: 'MarkdownV2', reply_markup: keyboard });
+
+            if (imageUrl) {
+              await ctx.replyWithPhoto(
+                { url: imageUrl },
+                { caption, parse_mode: 'Markdown', reply_markup: keyboard } // ✅ Указываем parse_mode
+              );
+            } else {
+              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard }); // ✅ Указываем parse_mode
+            }
           }
         } else {
           await ctx.reply('Афиш пока нет.');
         }
-      } else if (data === 'project') {
+      } else if (data === 'project') { // ✅ Обработка проектов
         const projects = await fetchProjects();
         if (projects.length > 0) {
           for (const p of projects) {
-            // ❗️Экранируем title и description
-            const message = `*${escapeMarkdownV2(p.title)}*\n${escapeMarkdownV2(p.description)}`;
-            // ❗️Отправляем кнопку "Забронировать" отдельно
+            // ✅ Используем полный URL для изображения
+            const imageUrl = p.imageUrl ? `http://localhost:3000${p.imageUrl}` : '';
+            // ✅ Отделяем заголовок от описания
+            const escapedTitle = escapeMarkdownV1(p.title);
+            const escapedDescription = escapeMarkdownV1(p.description);
+            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`; // ✅ Добавлены звёздочки и перенос строки
+            // ✅ Сокращаем caption до 1024 символов
+            const caption = fullCaption.length > 1024 ? fullCaption.substring(0, 1021) + '...' : fullCaption;
             const keyboard = {
               inline_keyboard: [
                 [
@@ -43,8 +84,15 @@ export const setupCallback = (bot: Telegraf) => {
                 ]
               ]
             };
-            // ❗️Используем MarkdownV2
-            await ctx.reply(message, { parse_mode: 'MarkdownV2', reply_markup: keyboard });
+
+            if (imageUrl) {
+              await ctx.replyWithPhoto(
+                { url: imageUrl },
+                { caption, parse_mode: 'Markdown', reply_markup: keyboard } // ✅ Указываем parse_mode
+              );
+            } else {
+              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard }); // ✅ Указываем parse_mode
+            }
           }
         } else {
           await ctx.reply('Проектов пока нет.');
