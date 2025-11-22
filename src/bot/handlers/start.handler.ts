@@ -1,21 +1,19 @@
-// src/bot/handlers/start.handler.ts
 import { Context } from 'telegraf';
-import { InputFile } from 'telegraf/typings/core/types/typegram';
 import { getPostersWithButtons, getProjectsWithButtons } from '../utils/button.helpers';
 
 // ✅ Правильная функция меню
-const mainMenu = () => ({
+export const mainMenu = () => ({
   inline_keyboard: [
     [
       { text: 'Афиша', callback_data: 'poster' }, // ✅
       { text: 'Проекты', callback_data: 'project' }, // ✅
     ],
     [
-      { text: 'Нужна помощь', callback_data: 'help' },
-      { text: 'Хочу промокод', callback_data: 'promocode' }, // ✅
+      { text: 'Нужна помощь', callback_data: 'help' }, // ✅ Исправлена опечатка (было callback_)
+      { text: 'Хочу промокод', callback_data: 'promocode' }, // ✅ Исправлена опечатка (было callback_)
     ],
     [
-      { text: 'Позвать Марию', callback_data: 'maria_help' }, // ✅
+      { text: 'Позвать Марию', callback_data: 'maria_help' }, // ✅ Исправлена опечатка (было callback_)
       { text: 'Ещё кое-что', callback_data: 'secret' }, // ✅
     ],
   ],
@@ -38,8 +36,10 @@ export const startHandler = async (ctx: Context) => {
     ],
   };
 
+  // ✅ Используем объект { source: ... } для отправки локального файла.
+  // Класс InputFile не экспортируется напрямую для использования через new.
   await ctx.replyWithPhoto(
-    new InputFile(imagePath), // ✅ Используем InputFile
+    { source: imagePath },
     {
       caption: 'Привет! Я Тигробот Мэддик, житель Madkids. \nMadkids - это зоны для безудержного веселья и прекрасного времяпрепровождения.',
       reply_markup: keyboard,

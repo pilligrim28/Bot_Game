@@ -1,54 +1,73 @@
 import { Telegraf, Context } from 'telegraf';
 import { fetchPosters, fetchProjects } from '../utils/data-fetcher';
+import { mainMenu, welcomeText } from './start.handler';
 
-// ✅ Улучшенная функция экранирования (только опасные символы)
-// ✅ Улучшенная функция экранирования (только реально опасные символы)
+// ✅ Функция экранирования символов для MarkdownV2 (используем ограниченный набор для совместимости)
 function escapeMarkdownV1(text: string): string {
+  if (!text) return '';
   return text
-    .replace(/\*/g, '\\*') // ✅ Экранируем *
-    .replace(/_/g, '\\_') // ✅ Экранируем _
-    .replace(/\[/g, '\\[') // ✅ Экранируем [
-    .replace(/\]/g, '\\]') // ✅ Экранируем ]
-    .replace(/\(/g, '\\(') // ✅ Экранируем (
-    .replace(/\)/g, '\\)') // ✅ Экранируем )
-    .replace(/~/g, '\\~') // ✅ Экранируем ~
-    .replace(/`/g, '\\`') // ✅ Экранируем `
-    .replace(/>/g, '\\>') // ✅ Экранируем >
-    .replace(/#/g, '\\#') // ✅ Экранируем #
-    .replace(/\+/g, '\\+') // ✅ Экранируем +
-    // .replace(/-/g, '\\-')  // ❗️Убрано
-    .replace(/=/g, '\\=') // ✅ Экранируем =
-    .replace(/\|/g, '\\|') // ✅ Экранируем |
-    .replace(/\{/g, '\\{') // ✅ Экранируем {
-    .replace(/\}/g, '\\}') // ✅ Экранируем }
-    // .replace(/\./g, '\\.')  // ❗️Убрано
-    // .replace(/!/g, '\\!'); // ❗️Убрано
-    // .replace(/\?/g, '\\?'); // ❗️Убрано
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .replace(/~/g, '\\~')
+    .replace(/`/g, '\\`')
+    .replace(/>/g, '\\>')
+    .replace(/#/g, '\\#')
+    .replace(/\+/g, '\\+')
+    .replace(/=/g, '\\=')
+    .replace(/\|/g, '\\|')
+    .replace(/\{/g, '\\{')
+    .replace(/\}/g, '\\}');
 }
 
 export const setupCallback = (bot: Telegraf) => {
   bot.on('callback_query', async (ctx) => {
+    // Явное приведение типа или проверка, так как в Telegraf типы callbackQuery могут отличаться
     const query = ctx.callbackQuery;
 
-    if ('data' in query) {
+    if (query && 'data' in query) {
       const data = query.data;
 
+      // === ЛОГИКА ВОЗВРАТА В МЕНЮ ===
+      if (data === 'back_home') {
+        await ctx.answerCbQuery('Возвращаемся в меню...');
+        // Отправляем стартовое сообщение заново
+        await ctx.replyWithPhoto(
+            { source: './assets/mascot.png' }, 
+            {
+                caption: welcomeText,
+                reply_markup: mainMenu
+            }
+        );
+        // Опционально: удаляем сообщение, на котором нажали кнопку, чтобы не засорять чат
+        // await ctx.deleteMessage().catch(() => {});
+        return;
+      }
+
+      // === АФИША ===
       if (data === 'poster') {
         const posters = await fetchPosters();
         if (posters.length > 0) {
           for (const p of posters) {
-            // ✅ Используем полный URL для изображения
             const imageUrl = p.imageUrl ? `http://localhost:3000${p.imageUrl}` : '';
-            // ✅ Отделяем заголовок от описания
             const escapedTitle = escapeMarkdownV1(p.title);
             const escapedDescription = escapeMarkdownV1(p.description);
-            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`; // ✅ Добавлены звёздочки и перенос строки
-            // ✅ Сокращаем caption до 1024 символов
+            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`;
+            
+            // Обрезаем, если слишком длинное
             const caption = fullCaption.length > 1024 ? fullCaption.substring(0, 1021) + '...' : fullCaption;
+            
+            // ✅ Добавляем кнопку "В меню" в каждый пост
             const keyboard = {
               inline_keyboard: [
                 [
                   { text: 'Забронировать', url: p.bookingUrl || 'https://example.com' }
+                ],
+                [
+                  { text: '⬅️ В меню', callback_data: 'back_home' }
                 ]
               ]
             };
@@ -56,31 +75,39 @@ export const setupCallback = (bot: Telegraf) => {
             if (imageUrl) {
               await ctx.replyWithPhoto(
                 { url: imageUrl },
-                { caption, parse_mode: 'Markdown', reply_markup: keyboard } // ✅ Указываем parse_mode
+                { caption, parse_mode: 'Markdown', reply_markup: keyboard }
               );
             } else {
-              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard }); // ✅ Указываем parse_mode
+              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard });
             }
           }
         } else {
-          await ctx.reply('Афиш пока нет.');
+          await ctx.reply('Афиш пока нет.', {
+              reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+          });
         }
-      } else if (data === 'project') { // ✅ Обработка проектов
+        await ctx.answerCbQuery();
+      } 
+      
+      // === ПРОЕКТЫ ===
+      else if (data === 'project') {
         const projects = await fetchProjects();
         if (projects.length > 0) {
           for (const p of projects) {
-            // ✅ Используем полный URL для изображения
             const imageUrl = p.imageUrl ? `http://localhost:3000${p.imageUrl}` : '';
-            // ✅ Отделяем заголовок от описания
             const escapedTitle = escapeMarkdownV1(p.title);
             const escapedDescription = escapeMarkdownV1(p.description);
-            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`; // ✅ Добавлены звёздочки и перенос строки
-            // ✅ Сокращаем caption до 1024 символов
+            const fullCaption = `*${escapedTitle}*\n\n${escapedDescription}`;
             const caption = fullCaption.length > 1024 ? fullCaption.substring(0, 1021) + '...' : fullCaption;
+            
+            // ✅ Добавляем кнопку "В меню" в каждый проект
             const keyboard = {
               inline_keyboard: [
                 [
                   { text: 'Забронировать', url: p.bookingUrl || 'https://example.com' }
+                ],
+                [
+                  { text: '⬅️ В меню', callback_data: 'back_home' }
                 ]
               ]
             };
@@ -88,26 +115,42 @@ export const setupCallback = (bot: Telegraf) => {
             if (imageUrl) {
               await ctx.replyWithPhoto(
                 { url: imageUrl },
-                { caption, parse_mode: 'Markdown', reply_markup: keyboard } // ✅ Указываем parse_mode
+                { caption, parse_mode: 'Markdown', reply_markup: keyboard }
               );
             } else {
-              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard }); // ✅ Указываем parse_mode
+              await ctx.reply(caption, { parse_mode: 'Markdown', reply_markup: keyboard });
             }
           }
         } else {
-          await ctx.reply('Проектов пока нет.');
+            await ctx.reply('Проектов пока нет.', {
+                reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+            });
         }
-      } else if (data === 'help') {
-        await ctx.reply('Нужна помощь? Напиши нам!');
+        await ctx.answerCbQuery();
+      } 
+      
+      // === ДРУГИЕ КНОПКИ ===
+      else if (data === 'help') {
+        await ctx.reply('Нужна помощь? Напиши нам!', {
+            reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+        });
+        await ctx.answerCbQuery();
       } else if (data === 'promocode') {
-        await ctx.reply('Вот твой промокод: ABC123');
+        await ctx.reply('Вот твой промокод: ABC123', {
+            reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+        });
+        await ctx.answerCbQuery();
       } else if (data === 'maria_help') {
-        await ctx.reply('Мария уже спешит на помощь!');
+        await ctx.reply('Мария уже спешит на помощь!', {
+            reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+        });
+        await ctx.answerCbQuery();
       } else if (data === 'secret') {
-        await ctx.reply('Секретное сообщение 😎');
+        await ctx.reply('Секретное сообщение 😎', {
+            reply_markup: { inline_keyboard: [[{ text: '⬅️ В меню', callback_data: 'back_home' }]] }
+        });
+        await ctx.answerCbQuery();
       }
     }
-
-    await ctx.answerCbQuery();
   });
 };
