@@ -5,7 +5,10 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:all": "npm run build && npm run build:frontend",
     "start": "node dist/main.js",
+    "start:prod": "node dist/main.js",
     "dev": "ts-node src/main.ts",
     "dev:watch": "nodemon --exec ts-node src/main.ts",
     "dev:bot": "ts-node src/bot/bot.ts",

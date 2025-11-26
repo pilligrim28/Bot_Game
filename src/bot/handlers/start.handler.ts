@@ -19,6 +19,9 @@ export const mainMenu = () => ({
   ],
 });
 
+export const welcomeText =
+  'Привет! Я Тигробот Мэддик, житель Madkids. \nMadkids - это зоны для безудержного веселья и прекрасного времяпрепровождения.';
+
 export const startHandler = async (ctx: Context) => {
   // ❗️Замени на путь к твоему локальному изображению
   const imagePath = './assets/mascot.png';
@@ -31,8 +34,8 @@ export const startHandler = async (ctx: Context) => {
   const keyboard = {
     inline_keyboard: [
       ...mainMenu().inline_keyboard,
-      ...posterButtons,
-      ...projectButtons,
+     // ...posterButtons,
+      //...projectButtons,
     ],
   };
 
@@ -41,7 +44,7 @@ export const startHandler = async (ctx: Context) => {
   await ctx.replyWithPhoto(
     { source: imagePath },
     {
-      caption: 'Привет! Я Тигробот Мэддик, житель Madkids. \nMadkids - это зоны для безудержного веселья и прекрасного времяпрепровождения.',
+      caption: welcomeText,
       reply_markup: keyboard,
     }
   );

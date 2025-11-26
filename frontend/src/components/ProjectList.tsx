@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchProjects, deleteProject } from '../services/api';
+import { API_BASE_URL } from '../services/api';
 import type { Project } from '../types';
 
 interface ProjectListProps {
@@ -42,7 +43,13 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onEdit }) => {
           <div key={p.id} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px 0' }}>
             <h4>{p.title}</h4>
             <p>{p.description}</p>
-            {p.imageUrl && <img src={p.imageUrl} alt={p.title} style={{ maxWidth: '200px' }} />}
+            {p.imageUrl && (
+              <img
+                src={p.imageUrl.startsWith('http') ? p.imageUrl : `${API_BASE_URL}${p.imageUrl}`}
+                alt={p.title}
+                style={{ maxWidth: '200px' }}
+              />
+            )}
             <div>
               <button onClick={() => onEdit(p)}>Редактировать</button>
               <button onClick={() => handleDelete(p.id)}>Удалить</button>

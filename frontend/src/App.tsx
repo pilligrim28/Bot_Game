@@ -9,6 +9,7 @@ import { PromoList } from './components/PromoList'; // ✅
 import { ModalWrapper } from './components/Modal';
 import type { Poster, Project } from './types';
 import './App.css';
+import Login from './components/Login';
 
 function App() {
   const [isPosterModalOpen, setIsPosterModalOpen] = useState(false);
@@ -16,6 +17,8 @@ function App() {
   const [isPromoModalOpen, setIsPromoModalOpen] = useState(false);
   const [editingPoster, setEditingPoster] = useState<Poster | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [isAuth, setIsAuth] = useState<boolean>(() => localStorage.getItem('isAuth') === 'true');
 
   const handleEditPoster = (item: Poster) => {
     setEditingPoster(item);
@@ -35,25 +38,46 @@ function App() {
     setEditingProject(null);
   };
 
+  if (!isAuth) {
+    return <Login onLogin={() => setIsAuth(true)} />;
+  }
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Админка для афиш, проектов и промокодов</h1>
+    <div className="app">
+      <header className="app-header">
+        <h1>Админка для афиш, проектов и промокодов</h1>
+      </header>
 
-      <div>
-        <button onClick={() => setIsPosterModalOpen(true)}>Добавить афишу</button>
-        <button onClick={() => setIsProjectModalOpen(true)}>Добавить проект</button>
-        <button onClick={() => setIsPromoModalOpen(true)}>Добавить промокод</button>
-      </div>
+      <div className="app-content">
+        <div className="forms-section">
+          <div style={{ marginBottom: 12 }}>
+            <button onClick={() => setIsPosterModalOpen(true)}>Добавить афишу</button>
+            <button onClick={() => setIsProjectModalOpen(true)} style={{ marginLeft: 8 }}>Добавить проект</button>
+            <button onClick={() => setIsPromoModalOpen(true)} style={{ marginLeft: 8 }}>Добавить промокод</button>
+            <button style={{ marginLeft: 12 }} onClick={() => { localStorage.removeItem('isAuth'); setIsAuth(false); }}>Выйти</button>
+          </div>
 
-      <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
-        <div>
-          <PosterList onEdit={handleEditPoster} />
-          <ProjectList onEdit={handleEditProject} />
-          <PromoList /> {/* ✅ Добавим список промокодов */}
+          <div className="list-container">
+            <PosterList onEdit={handleEditPoster} />
+            <ProjectList onEdit={handleEditProject} />
+            <PromoList />
+          </div>
         </div>
       </div>
 
-      {/* Модальное окно для афиши */}
+      {/* FAB for mobile quick add */}
+      <div className="fab-wrapper">
+        {isFabOpen && (
+          <div className="fab-menu">
+            <button className="fab-item" onClick={() => { setIsPosterModalOpen(true); setIsFabOpen(false); }}>Афиша</button>
+            <button className="fab-item" onClick={() => { setIsProjectModalOpen(true); setIsFabOpen(false); }}>Проект</button>
+            <button className="fab-item" onClick={() => { setIsPromoModalOpen(true); setIsFabOpen(false); }}>Промокод</button>
+          </div>
+        )}
+        <button className="fab" onClick={() => setIsFabOpen((s) => !s)} aria-label="Добавить">+</button>
+      </div>
+
+      {/* Modals */}
       <ModalWrapper
         isOpen={isPosterModalOpen}
         onClose={() => {
@@ -65,7 +89,6 @@ function App() {
         <PosterForm itemToEdit={editingPoster} onSaved={handleSaved} />
       </ModalWrapper>
 
-      {/* Модальное окно для проекта */}
       <ModalWrapper
         isOpen={isProjectModalOpen}
         onClose={() => {
@@ -77,7 +100,6 @@ function App() {
         <ProjectForm itemToEdit={editingProject} onSaved={handleSaved} />
       </ModalWrapper>
 
-      {/* Модальное окно для промокода */}
       <ModalWrapper
         isOpen={isPromoModalOpen}
         onClose={() => setIsPromoModalOpen(false)}

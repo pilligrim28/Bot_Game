@@ -4,12 +4,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Poster } from './admin/entities/poster.entity';
 import { Project } from './admin/entities/project.entity';
 import { Promo } from './admin/entities/promo.entity'; // ✅
+import { Subscriber } from './admin/entities/subscriber.entity';
 import { PosterService } from './admin/services/poster.service';
 import { ProjectService } from './admin/services/project.service';
 import { PromoService } from './admin/services/promo.service'; // ✅
+import { SubscriberService } from './admin/services/subscriber.service';
 import { PosterController } from './admin/controllers/poster.controller';
 import { ProjectController } from './admin/controllers/project.controller';
 import { PromoController } from './admin/controllers/promo.controller'; // ✅
+import { SubscriberController } from './admin/controllers/subscriber.controller';
 
 @Module({
   imports: [
@@ -20,12 +23,12 @@ import { PromoController } from './admin/controllers/promo.controller'; // ✅
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'telegram_bot',
-      entities: [Poster, Project, Promo], // ✅ Добавь Promo
+      entities: [Poster, Project, Promo, Subscriber], // ✅ Добавь Promo
       synchronize: true, // ⚠️ Не использовать в продакшене
     }),
-    TypeOrmModule.forFeature([Poster, Project, Promo]), // ✅ Добавь Promo
+    TypeOrmModule.forFeature([Poster, Project, Promo, Subscriber]), // ✅ Добавь Promo
   ],
-  controllers: [PosterController, ProjectController, PromoController], // ✅ Добавь PromoController
-  providers: [PosterService, ProjectService, PromoService], // ✅ Добавь PromoService
+  controllers: [PosterController, ProjectController, PromoController, SubscriberController], // ✅ Добавь PromoController
+  providers: [PosterService, ProjectService, PromoService, SubscriberService], // ✅ Добавь PromoService
 })
 export class AppModule {}

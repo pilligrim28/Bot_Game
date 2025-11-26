@@ -1,16 +1,20 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Promo {
+export class Subscriber {
   @PrimaryGeneratedColumn()
   id!: number;
 
   @Column({ unique: true })
-  code!: string;
+  chatId!: string;
+
+  @Column({ default: true })
+  posters!: boolean;
+
+  @Column({ default: true })
+  projects!: boolean;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt!: Date;
-
-  @Column({ type: 'timestamp', nullable: true })
-  expiresAt?: Date | null;
 }
+

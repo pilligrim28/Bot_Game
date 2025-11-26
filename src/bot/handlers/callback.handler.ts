@@ -1,6 +1,7 @@
 import { Telegraf, Context } from 'telegraf';
 import { fetchPosters, fetchProjects } from '../utils/data-fetcher';
-import { mainMenu, welcomeText } from './start.handler';
+import { welcomeText } from './start.handler';
+import { mainMenu } from '../keyboards/main.menu';
 
 // ✅ Функция экранирования символов для MarkdownV2 (используем ограниченный набор для совместимости)
 function escapeMarkdownV1(text: string): string {
@@ -36,11 +37,11 @@ export const setupCallback = (bot: Telegraf) => {
         await ctx.answerCbQuery('Возвращаемся в меню...');
         // Отправляем стартовое сообщение заново
         await ctx.replyWithPhoto(
-            { source: './assets/mascot.png' }, 
-            {
-                caption: welcomeText,
-                reply_markup: mainMenu
-            }
+          { source: './assets/mascot.png' },
+          {
+            caption: welcomeText,
+            reply_markup: mainMenu()
+          }
         );
         // Опционально: удаляем сообщение, на котором нажали кнопку, чтобы не засорять чат
         // await ctx.deleteMessage().catch(() => {});
